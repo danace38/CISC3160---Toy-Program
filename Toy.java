@@ -7,12 +7,19 @@
  *  Toy Project
  */
 
+import java.util.*;
 
- public class Toy{
+
+public class Toy{
 
     public static void main(String[] args) {
         
         
     }
+
+ private static Map<String, Integer> variables = new HashMap<>();
+ private static Set<String> initializedString = new HashSet<>();
+ 
+ 
 
  }
