@@ -10,6 +10,11 @@ Brooklyn College, CUNY
 
 ![image](https://github.com/danace38/CISC3160---Toy-Program/assets/94500841/205a0eb6-3de8-4b96-9981-5750078bda9e)
 
+* MY OUTPUT: 
+
+![image](https://github.com/danace38/CISC3160---Toy-Program/assets/94500841/6980348b-47d4-42d0-aff8-b3690c82e534)
+
+
 
 
 
