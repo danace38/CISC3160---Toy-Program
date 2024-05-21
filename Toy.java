@@ -25,7 +25,7 @@ public class Toy{
 
    private static Map<String, Integer> variables = new HashMap<>(); //holding variable names and integer values
    private static Set<String> initializedString = new HashSet<>(); //Storing and keeping track of initialized string variables 
-   private static final Pattern identifyPattern = Pattern.compile("[a-zA-Z_][a-zA-Z_0-9]*"); //Matching valid variable names 
+   private static final Pattern identifyVariable = Pattern.compile("[a-zA-Z_][a-zA-Z_0-9]*"); //Matching valid variable names 
 
     public static void main(String[] args) {
 
@@ -36,11 +36,11 @@ public class Toy{
          "x = 1; y = 2; z = --- (x+y) * (x + - y);",
       };
 
-      for (int i = 0; i < input.length; i++){
-         System.out.println("Input " + (i+1) + ": ");
+      for (int i = 0; i < input.length; i++){ //iterating through the input
+         System.out.println("\nInput " + (i+1) + ": ");
          System.out.println();
          try{
-            parse(input[i]);
+            parse(input[i]); //calling parse method with current expression as parameter
             printVar();
          }catch (Exception exc){
             System.out.println("Error");
@@ -50,49 +50,50 @@ public class Toy{
         
     }
 
-    static class syntaxErrorExc extends Exception{
-      public syntaxErrorExc(String msg){
+    static class syntaxError extends Exception{ //throwing exception if there is a missing semicolon or invalid operator
+      public syntaxError(String msg){
          super(msg);
       }
    }
 
-   static class variableExc extends Exception{
-      public variableExc(String msg){
+   static class uninitializedVar extends Exception{ //throwing exception if there is uninitialized variable in expression
+      public uninitializedVar(String msg){
          super(msg);
       }
    }
 
-   private static void parse(String input) throws syntaxErrorExc, variableExc{
+   
+   private static void parse(String input) throws syntaxError, uninitializedVar{ // parse method to process each expression within input strings
       variables.clear();
       initializedString.clear();
 
-      String[] assignments = input.split(";");
-      for (String assignment : assignments){
+      String[] assignments = input.split(";"); //splitting input string into individual assignments
+      for (String assignment : assignments){ //iterating through each assignment
          if (assignment.trim().isEmpty()) continue;
             String[] parts = assignment.split("=");
-            if (parts.length != 2) throw new syntaxErrorExc("Invalid syntax");
+            if (parts.length != 2) throw new syntaxError("Invalid syntax");
 
          String identifier = parts[0].trim();
          String expression = parts[1].trim();
 
-         if (!identifyPattern.matcher(identifier).matches()) throw new syntaxErrorExc("Invalid identifier: " + identifier);
+         if (!identifyVariable.matcher(identifier).matches()) throw new syntaxError("Invalid identifier: " + identifier); //validate indentifier or throw error if it is invalid
          int value = evalExp(expression);
          variables.put(identifier, value);
          initializedString.add(identifier);
       }
    }
 
-   private static int evalExp(String expression) throws syntaxErrorExc, variableExc{
-      expression = expression.replaceAll("\\s+", "");
-      if (expression.isEmpty()) throw new syntaxErrorExc("Empty");
+   private static int evalExp(String expression) throws syntaxError, uninitializedVar{ //evaluate expression method as a string argument
+      expression = expression.replaceAll("\\s+", ""); //removing all whitespaces
+      if (expression.isEmpty()) throw new syntaxError("Empty"); //if expression is empty, throw error
 
-      Stack<Integer> values = new Stack<>();
-      Stack<Character> oper = new Stack<>();
+      Stack<Integer> values = new Stack<>(); //storing operand
+      Stack<Character> oper = new Stack<>(); // storing operators
 
-      for(int i = 0; i < expression.length(); i++){
-         char c = expression.charAt(i);
+      for(int i = 0; i < expression.length(); i++){ //iterating through each expression
+         char c = expression.charAt(i); // charcter
 
-        if(Character.isDigit(c)){
+        if(Character.isDigit(c)){ //if character is digit, build a number by iterating through consecutive digits
          int num = 0;
          while (i < expression.length() && Character.isDigit(expression.charAt(i))){
             num = num * 10 + (expression.charAt(i) - '0');
@@ -100,7 +101,7 @@ public class Toy{
          }
          i--;
          values.push(num);
-        }else if (Character.isLetter(c) || c == '_'){
+        }else if (Character.isLetter(c) || c == '_'){ //if charater is letter or underscore, build a variable name string and check if variable is initialized
          StringBuilder sb = new StringBuilder();
          while (i < expression.length() && (Character.isLetterOrDigit(expression.charAt(i)) || expression.charAt(i) == '_')) {
              sb.append(expression.charAt(i));
@@ -108,70 +109,70 @@ public class Toy{
          }
          i--;
          String identifier = sb.toString();
-         if (!initializedString.contains(identifier)) throw new variableExc("Uninitialized variable: " + identifier);
+         if (!initializedString.contains(identifier)) throw new uninitializedVar("Uninitialized variable: " + identifier);
          values.push(variables.get(identifier));
-        } else if (c == '(') {
+        } else if (c == '(') { //if character is '(', push into oper stack 
          oper.push(c);
         }else if (c == ')'){
          while (oper.peek() != '('){
             values.push(operator(oper.pop(), values.pop(), values.pop()));
          }
          oper.pop();
-        }else if (c == '+' || c == '-' || c == '*' || c == '/'){
+        }else if (c == '+' || c == '-' || c == '*' || c == '/'){ //if character is a arithmetic operator, push into oper stack
          while (!oper.isEmpty() && precedence(c) <= precedence(oper.peek())){
             values.push(operator(oper.pop(), values.pop(), values.pop()));
          }
          oper.pop();
-      }else if(c == '-' && (i == 0 || expression.charAt(i - 1) == '(')){
+      }else if(c == '-' && (i == 0 || expression.charAt(i - 1) == '(')){ //if charater is '-' or after an opening parenthesis, push 0 into the values stack
          values.push(0);
          oper.push('-');
       }else {
-         throw new syntaxErrorExc("Invalid: charter in expression: " + c);
+         throw new syntaxError("Invalid: charter in expression: " + c);
       }
    }
 
       while (!oper.isEmpty()){
-         values.push(operator(oper.pop(), values.pop(), values.pop()));
+         values.push(operator(oper.pop(), values.pop(), values.pop())); //pushing result into values stack
       }
 
-      return values.pop();
+      return values.pop(); //pop remaining values from the value stack, which represents final result of expression evaluation 
    
 
    }
 
-   private static int operator (char opr, int a, int b) throws syntaxErrorExc{
+   private static int operator (char opr, int a, int b) throws syntaxError{ //operator method to perform arithemit operation
       switch (opr) {
          case '+': 
-         return (a + b);
+            return (a + b);
          case '-':
-         return (a - b);
+           return (a - b);
          case '*':
-         return (a * b);
+           return (a * b);
          case '/':
-         if (b == 0) throw new syntaxErrorExc("Invalid: division by 0");
-         return a/b;
+         if (b == 0) throw new syntaxError("Invalid: division by 0");
+            return a/b;
          default:
-         throw new syntaxErrorExc("Invalid: unknow operator " + opr);
+             throw new syntaxError("Invalid: unknow operator " + opr);
             
       }
    }
 
-   private static int precedence(char opr){
+   private static int precedence(char opr){ //precedence method to determine precedence of a given operator
       switch (opr) {
          case '+':
          case '-':
-         return 1;
+             return 1; //low precedence 
          case '*':
          case '/':
-         return 2;
+             return 2; //high precence
          case '(': 
-         return 0;
+             return 0; //lowest precedence 
          default:
-         return -1;
+            return -1; //if operator is not recognized, return -1
       }
    }
 
-   private static void printVar(){
+   private static void printVar(){ //print variable method to print final values encountered during parsing
       for (Map.Entry<String, Integer > entry: variables.entrySet()){
          System.out.println(entry.getKey() + " = " + entry.getValue());
       }
