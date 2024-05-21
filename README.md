@@ -1,6 +1,6 @@
 This the Toy Project assignment for CISC 3160 -- Programming Languages.
 
-\nBrooklyn College, CUNY.
+Brooklyn College, CUNY.
 
 -------------------------------------------------------------------------
 
